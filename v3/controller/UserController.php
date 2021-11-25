@@ -12,13 +12,13 @@
 
       $json = file_get_contents('php://input');
       $data = json_decode($json);
-      
-      $this->_user['id'] = $_GET['id'] ?? $data->id ?? null;
+
+      $this->_user['id'] = $_REQUEST['id'] ?? $data->id ?? null;
       $this->_user['name'] = $_POST['name'] ?? $data->name ?? null;
       $this->_user['surname'] = $_POST['surname'] ?? $data->surname ?? null;
       $this->_user['email'] = $_POST['email'] ?? $data->email ?? null;
       $this->_user['phone'] = $_POST['phone'] ?? $data->phone ?? null;
-      $this->_user['photo'] = $_POST['photo'] ?? $data->photo ?? null;
+      $this->_user['photo'] = $_FILES['photo']['name'] ?? null;
     }
 
     public function router() {

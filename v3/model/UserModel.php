@@ -37,12 +37,18 @@
     public function create($data) {
       try {
         $sql = "INSERT INTO tbl_user (name, surname, email, phone, photo) VALUES (:name, :surname, :email, :phone, :photo)";
+
+        $extension = pathinfo($data["photo"], PATHINFO_EXTENSION);
+        $filename = md5(microtime()) . ".$extension";
+        $path = "../uploads/" . $filename;
+        move_uploaded_file($_FILES["photo"]["tmp_name"], $path);
+
         $stm = $this->_conn->prepare($sql);
         $stm->bindParam(":name", $data["name"]);
         $stm->bindParam(":surname", $data["surname"]);
         $stm->bindParam(":email", $data["email"]);
         $stm->bindParam(":phone", $data["phone"]);
-        $stm->bindParam(":photo", $data["photo"]);
+        $stm->bindParam(":photo", $filename);
         $stm->execute();
         return [
           "status" => "success",
@@ -56,8 +62,24 @@
 
     public function update($id, $data) {
       try {
-        $sql = "UPDATE tbl_user SET name = :name, surname = :surname, email = :email, phone = :phone, photo = :photo WHERE id_user = $id";
+        $sql = "SELECT photo FROM tbl_user WHERE id_user = :id";
         $stm = $this->_conn->prepare($sql);
+        $stm->bindParam(":id", $id);
+        $stm->execute();
+
+        $result = $stm->fetch(PDO::FETCH_ASSOC);
+        $photo = $result["photo"];
+        unlink("../uploads/$photo");
+        
+        $sql = "UPDATE tbl_user SET name = :name, surname = :surname, email = :email, phone = :phone, photo = :photo WHERE id_user = :id";
+
+        $extension = pathinfo($data["photo"], PATHINFO_EXTENSION);
+        $filename = md5(microtime()) . ".$extension";
+        $path = "../uploads/" . $filename;
+        move_uploaded_file($_FILES["photo"]["tmp_name"], $path);
+
+        $stm = $this->_conn->prepare($sql);
+        $stm->bindParam(":id", $id);
         $stm->bindParam(":name", $data["name"]);
         $stm->bindParam(":surname", $data["surname"]);
         $stm->bindParam(":email", $data["email"]);
@@ -80,8 +102,17 @@
           return generateError("User not found");
         }
         
-        $sql = "DELETE FROM tbl_user WHERE id_user = $id";
+        $sql = "SELECT photo FROM tbl_user WHERE id_user = :id";
         $stm = $this->_conn->prepare($sql);
+        $stm->bindParam(":id", $id);
+        $stm->execute();
+        $result = $stm->fetch(PDO::FETCH_ASSOC);
+        $photo = $result["photo"];
+        unlink("../uploads/$photo");
+
+        $sql = "DELETE FROM tbl_user WHERE id_user = :id";
+        $stm = $this->_conn->prepare($sql);
+        $stm->bindParam(":id", $id);
         $stm->execute();
         return [
           "status" => "success",
